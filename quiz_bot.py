@@ -1,0 +1,127 @@
+import pickle
+
+from os import path
+
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
+
+
+ANSWER_FILE = "answers.pkl"
+
+
+def get_driver():
+    mobile_emulation = {
+        "deviceMetrics": {"width": 360, "height": 640, "pixelRatio": 3.0},
+        "userAgent": "Mozilla/5.0 (Linux; Android 4.2.1; en-us; Nexus 5 Build/JOP40D) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19",
+    }
+    chrome_options = Options()
+    chrome_options.add_experimental_option("mobileEmulation", mobile_emulation)
+    driver = webdriver.Chrome(chrome_options=chrome_options)
+
+    driver.get("http://benz.me/hextech-chest-quiz")
+    driver.switch_to.frame("frame")
+    return driver
+
+
+def save_answers(answers):
+    with open(ANSWER_FILE, "wb") as answer_file:
+        pickle.dump(answers, answer_file)
+
+
+def get_answers():
+    if path.isfile(ANSWER_FILE):
+        with open(ANSWER_FILE, "rb") as answer_file:
+            return pickle.load(answer_file)
+    else:
+        return {}
+
+
+def button_click(driver, button):
+    driver.execute_script("arguments[0].click();", button)
+
+
+def start_quiz(driver):
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "span.mc-checkmark"))
+    )
+
+    checkbox_element = driver.find_element_by_css_selector("span.mc-checkmark")
+    button_click(driver, checkbox_element)
+
+    main_button = driver.find_elements_by_class_name("main-button")[0]
+    button_click(driver, main_button)
+
+    name_input = driver.find_element_by_class_name("name-input")
+    name_input.send_keys("Vava")
+
+    custom_button = driver.find_element_by_class_name("custom-button")
+    button_click(driver, custom_button)
+
+
+def get_answer_text(answer_element):
+    return answer_element.find_element_by_tag_name("span").text
+
+
+def get_choice(question, choices, answers):
+    answer = answers.get(question)
+    if answer:
+        for choice in choices:
+            answer_text = get_answer_text(choice)
+            if answer_text == answer:
+                return choice
+        return
+    else:
+        return choices[1]
+
+
+def get_correct_answer(driver):
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CLASS_NAME, "is-correct"))
+    )
+    correct_answer_element = driver.find_element_by_class_name("is-correct")
+    return get_answer_text(correct_answer_element)
+
+
+def answer_question(driver, answers, question):
+    choices = driver.find_elements_by_class_name("choice")
+
+    option_a = choices[0]
+    option_b = choices[1]
+    option_c = choices[2]
+
+    choice = get_choice(question, choices, answers)
+    button_click(driver, choice)
+    correct_answer = get_correct_answer(driver)
+    answers[question] = correct_answer
+
+
+def quiz_loop(driver, answers):
+    previous_question = None
+    while True:
+        question_element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "question-text"))
+        )
+        if question_element == previous_question:
+            continue
+        time.sleep(0.3)
+        answer_question(driver, answers, question_element.text)
+        save_answers(answers)
+        previous_question = question_element
+
+
+def run():
+    driver = get_driver()
+    answers = get_answers()
+
+    start_quiz(driver)
+
+    quiz_loop(driver, answers)
+
+
+if __name__ == "__main__":
+    run()
