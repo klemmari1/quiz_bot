@@ -101,7 +101,7 @@ def quiz_loop(driver, answers):
         )
         if question_element == previous_question:
             continue
-        time.sleep(0.3)
+        time.sleep(0.5)
         answer_question(driver, answers, question_element.text)
         save_answers(answers)
         previous_question = question_element
