@@ -1,18 +1,15 @@
 import pickle
-import time
 import sys
+import time
 from os import path
 
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 ANSWER_FILE = "answers.pkl"
-PLAYER_NAME = ""
 
 
 def get_driver(url):
@@ -39,7 +36,7 @@ def button_click(driver, button):
     driver.execute_script("arguments[0].click();", button)
 
 
-def start_quiz(driver):
+def start_quiz(driver, player_name):
     WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, "span.mc-checkmark"))
     )
@@ -52,7 +49,7 @@ def start_quiz(driver):
 
     try:
         name_input = driver.find_element_by_class_name("name-input")
-        name_input.send_keys(PLAYER_NAME)
+        name_input.send_keys(player_name)
     except NoSuchElementException:
         pass
 
@@ -115,14 +112,13 @@ def quiz_loop(driver, answers):
         previous_question = question_element
 
 
-def run(url):
+def run(url, player_name):
     driver = get_driver(url)
     answers = get_answers()
 
-    start_quiz(driver)
-
+    start_quiz(driver, player_name)
     quiz_loop(driver, answers)
 
 
 if __name__ == "__main__":
-    run(sys.argv[1])
+    run(sys.argv[1], sys.argv[2])
