@@ -1,5 +1,6 @@
 import pickle
 import time
+import sys
 from os import path
 
 from selenium import webdriver
@@ -12,9 +13,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 ANSWER_FILE = "answers.pkl"
 
 
-def get_driver():
+
+def get_driver(url):
     driver = webdriver.Chrome()
-    driver.get("http://benz.me/hextech-chest-quiz")
+    driver.get(url)
     driver.switch_to.frame("frame")
     return driver
 
@@ -105,8 +107,8 @@ def quiz_loop(driver, answers):
         previous_question = question_element
 
 
-def run():
-    driver = get_driver()
+def run(url):
+    driver = get_driver(url)
     answers = get_answers()
 
     start_quiz(driver)
@@ -115,4 +117,4 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    run(sys.argv[1])
