@@ -12,7 +12,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 ANSWER_FILE = "answers.pkl"
-PLAYER_NAME = "SuperSayan"
+PLAYER_NAME = ""
 
 
 def get_driver(url):
