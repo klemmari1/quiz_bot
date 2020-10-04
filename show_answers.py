@@ -1,7 +1,6 @@
 import pickle
 from os import path
 
-
 ANSWER_FILE = "answers.pkl"
 
 

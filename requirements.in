@@ -1,2 +1,4 @@
 black
+isort
+pip-tools
 selenium
