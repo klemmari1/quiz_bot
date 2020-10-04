@@ -11,7 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 ANSWER_FILE = "answers.pkl"
-
+PLAYER_NAME = "SuperSayan"
 
 
 def get_driver(url):
@@ -50,7 +50,7 @@ def start_quiz(driver):
     button_click(driver, main_button)
 
     name_input = driver.find_element_by_class_name("name-input")
-    name_input.send_keys("Vava")
+    name_input.send_keys(PLAYER_NAME)
 
     custom_button = driver.find_element_by_class_name("custom-button")
     button_click(driver, custom_button)
