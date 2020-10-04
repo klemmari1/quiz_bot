@@ -6,6 +6,7 @@ from os import path
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -49,10 +50,17 @@ def start_quiz(driver):
     main_button = driver.find_elements_by_class_name("main-button")[0]
     button_click(driver, main_button)
 
-    name_input = driver.find_element_by_class_name("name-input")
-    name_input.send_keys(PLAYER_NAME)
+    try:
+        name_input = driver.find_element_by_class_name("name-input")
+        name_input.send_keys(PLAYER_NAME)
+    except NoSuchElementException:
+        pass
 
-    custom_button = driver.find_element_by_class_name("custom-button")
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "button.custom-button"))
+    )
+
+    custom_button = driver.find_element_by_css_selector("button.custom-button")
     button_click(driver, custom_button)
 
 
