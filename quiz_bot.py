@@ -12,10 +12,33 @@ from selenium.webdriver.support.ui import WebDriverWait
 ANSWER_FILE = "answers.pkl"
 
 
+def get_input_args():
+    url = sys.argv[1]
+    player_name = "Test123"
+    execute_click = 1  # 0 / 1
+    if len(sys.argv) >= 3:
+        player_name = sys.argv[2]
+    if len(sys.argv) >= 4:
+        execute_click = int(sys.argv[3])
+    return url, player_name, execute_click
+
+
 def get_driver(url):
-    driver = webdriver.Chrome()
+    options = webdriver.ChromeOptions()
+
+    options.add_argument("start-maximized")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("disable-infobars")
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option("useAutomationExtension", False)
+
+    driver = webdriver.Chrome(options=options)
     driver.get(url)
-    driver.switch_to.frame("frame")
+
+    WebDriverWait(driver, 5).until(
+        EC.frame_to_be_available_and_switch_to_it((By.ID, "frame"))
+    )
     return driver
 
 
@@ -33,7 +56,12 @@ def get_answers():
 
 
 def button_click(driver, button):
-    driver.execute_script("arguments[0].click();", button)
+    action = webdriver.ActionChains(driver)
+
+    action.move_to_element(button).pause(0.005).click_and_hold(button).pause(
+        0.005
+    ).release(button)
+    action.perform()
 
 
 def start_quiz(driver, player_name):
@@ -49,6 +77,7 @@ def start_quiz(driver, player_name):
 
     try:
         name_input = driver.find_element_by_class_name("name-input")
+        button_click(driver, name_input)
         name_input.send_keys(player_name)
     except NoSuchElementException:
         pass
@@ -72,9 +101,7 @@ def get_choice(question, choices, answers):
             answer_text = get_answer_text(choice)
             if answer_text == answer:
                 return choice
-        return
-    else:
-        return choices[1]
+    return choices[0]
 
 
 def get_correct_answer(driver):
@@ -85,40 +112,53 @@ def get_correct_answer(driver):
     return get_answer_text(correct_answer_element)
 
 
-def answer_question(driver, answers, question):
+def answer_question(driver, answers, question, execute_click):
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CLASS_NAME, "choice"))
+    )
     choices = driver.find_elements_by_class_name("choice")
 
-    option_a = choices[0]
-    option_b = choices[1]
-    option_c = choices[2]
-
     choice = get_choice(question, choices, answers)
-    button_click(driver, choice)
+    print(get_answer_text(choice))
+    if execute_click:
+        button_click(driver, choice)
+
     correct_answer = get_correct_answer(driver)
     answers[question] = correct_answer
 
 
-def quiz_loop(driver, answers):
+def quiz_loop(driver, answers, execute_click):
     previous_question = None
-    while True:
+    question_count = 0
+    while question_count < 7:
         question_element = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CLASS_NAME, "question-text"))
         )
-        if question_element == previous_question:
+        if question_element == previous_question or not getattr(
+            question_element, "text"
+        ):
             continue
-        time.sleep(0.5)
-        answer_question(driver, answers, question_element.text)
+        answer_question(driver, answers, question_element.text, execute_click)
         save_answers(answers)
         previous_question = question_element
+        question_count += 1
 
 
-def run(url, player_name):
+def run():
+    url, player_name, execute_click = get_input_args()
+
     driver = get_driver(url)
     answers = get_answers()
 
+    time.sleep(2)
+
     start_quiz(driver, player_name)
-    quiz_loop(driver, answers)
+    quiz_loop(driver, answers, execute_click)
+
+    print(driver.current_url)
+    time.sleep(3)
+    driver.close()
 
 
 if __name__ == "__main__":
-    run(sys.argv[1], sys.argv[2])
+    run()
