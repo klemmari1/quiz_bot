@@ -122,6 +122,8 @@ def answer_question(driver, answers, question, execute_click):
     print(get_answer_text(choice))
     if execute_click:
         button_click(driver, choice)
+    else:
+        driver.execute_script("arguments[0].style.color = 'green';", choice)
 
     correct_answer = get_correct_answer(driver)
     answers[question] = correct_answer
