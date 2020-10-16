@@ -15,12 +15,8 @@ ANSWER_FILE = "answers.pkl"
 
 def get_input_args():
     url = sys.argv[1]
-    player_name = "Test123"
-    execute_click = 1  # 0 / 1
-    if len(sys.argv) >= 3:
-        player_name = sys.argv[2]
-    if len(sys.argv) >= 4:
-        execute_click = int(sys.argv[3])
+    player_name = sys.argv[2]
+    execute_click = int(sys.argv[3])
     name = sys.argv[4]
     email = sys.argv[5]
     print("url: %s" % url)
@@ -153,17 +149,62 @@ def quiz_loop(driver, answers, execute_click):
         question_count += 1
 
 
+def claim_prize(driver: webdriver.Chrome, name, email):
+    close_button = WebDriverWait(driver, 30).until(
+        EC.visibility_of_element_located(
+            (By.CSS_SELECTOR, "span.cta-box button.close-button")
+        )
+    )
+    button_click(driver, close_button)
+
+    get_prize_button = WebDriverWait(driver, 60 * 60).until(
+        EC.visibility_of_element_located(
+            (By.CSS_SELECTOR, "span.prize-box button.main-button")
+        )
+    )
+    button_click(driver, get_prize_button)
+
+    # Opens another tab
+
+    time.sleep(1)
+    driver.switch_to.window(driver.window_handles[-1])
+
+    name_input = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.CSS_SELECTOR, "input[name='name']"))
+    )
+    name_input.send_keys(name)
+
+    email_input = driver.find_element_by_css_selector("input[name='email']")
+    email_input.send_keys(email)
+
+    region_select = driver.find_element_by_css_selector("select[name='gameServer']")
+    button_click(driver, region_select)
+
+    time.sleep(0.5)
+
+    euw = driver.find_element_by_css_selector("option[value='Europe West (EUW)']")
+    euw.click()
+
+    checkmark = driver.find_element_by_class_name("mc-checkmark")
+    button_click(driver, checkmark)
+
+    submit_button = driver.find_element_by_css_selector("input.custom-button")
+    button_click(driver, submit_button)
+
+
 def run():
-    url, player_name, execute_click = get_input_args()
+    url, player_name, execute_click, name, email = get_input_args()
 
     driver = get_driver(url)
     answers = get_answers()
 
     start_quiz(driver, player_name)
     quiz_loop(driver, answers, execute_click)
-
     print(driver.current_url)
-    time.sleep(3)
+
+    claim_prize(driver, name, email)
+
+    time.sleep(5)
     driver.close()
 
 
