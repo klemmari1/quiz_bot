@@ -1,4 +1,5 @@
 import pickle
+import random
 import sys
 import time
 from os import path
@@ -20,7 +21,15 @@ def get_input_args():
         player_name = sys.argv[2]
     if len(sys.argv) >= 4:
         execute_click = int(sys.argv[3])
-    return url, player_name, execute_click
+    name = sys.argv[4]
+    email = sys.argv[5]
+    print("url: %s" % url)
+    print("player_name: %s" % player_name)
+    print("execute_click: %s" % str(execute_click))
+    print("name: %s" % name)
+    print("email: %s" % email)
+
+    return url, player_name, execute_click, name, email
 
 
 def get_driver(url):
@@ -29,6 +38,7 @@ def get_driver(url):
     options.add_argument("start-maximized")
     options.add_argument("--disable-extensions")
     options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--log-level=OFF")
     options.add_argument("disable-infobars")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
@@ -58,18 +68,19 @@ def get_answers():
 def button_click(driver, button):
     action = webdriver.ActionChains(driver)
 
-    action.move_to_element(button).pause(0.005).click_and_hold(button).pause(
-        0.005
-    ).release(button)
+    xrand = button.size["width"] * random.uniform(0.3, 0.7)
+    yrand = button.size["height"] * random.uniform(0.3, 0.7)
+
+    action.move_to_element_with_offset(button, xrand, yrand).pause(
+        random.uniform(0.001, 0.009)
+    ).click_and_hold().pause(random.uniform(0.001, 0.009)).release(button)
     action.perform()
 
 
 def start_quiz(driver, player_name):
-    WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, "span.mc-checkmark"))
+    checkbox_element = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.CSS_SELECTOR, "span.mc-checkmark"))
     )
-
-    checkbox_element = driver.find_element_by_css_selector("span.mc-checkmark")
     button_click(driver, checkbox_element)
 
     main_button = driver.find_elements_by_class_name("main-button")[0]
@@ -82,11 +93,9 @@ def start_quiz(driver, player_name):
     except NoSuchElementException:
         pass
 
-    WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, "button.custom-button"))
+    custom_button = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.CSS_SELECTOR, "button.custom-button"))
     )
-
-    custom_button = driver.find_element_by_css_selector("button.custom-button")
     button_click(driver, custom_button)
 
 
@@ -105,18 +114,16 @@ def get_choice(question, choices, answers):
 
 
 def get_correct_answer(driver):
-    WebDriverWait(driver, 10).until(
+    correct_answer_element = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.CLASS_NAME, "is-correct"))
     )
-    correct_answer_element = driver.find_element_by_class_name("is-correct")
     return get_answer_text(correct_answer_element)
 
 
 def answer_question(driver, answers, question, execute_click):
-    WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.CLASS_NAME, "choice"))
+    choices = WebDriverWait(driver, 10).until(
+        EC.presence_of_all_elements_located((By.CLASS_NAME, "choice"))
     )
-    choices = driver.find_elements_by_class_name("choice")
 
     choice = get_choice(question, choices, answers)
     print(get_answer_text(choice))
@@ -151,8 +158,6 @@ def run():
 
     driver = get_driver(url)
     answers = get_answers()
-
-    time.sleep(2)
 
     start_quiz(driver, player_name)
     quiz_loop(driver, answers, execute_click)
