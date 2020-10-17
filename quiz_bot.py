@@ -64,12 +64,14 @@ def get_answers():
 def button_click(driver, button):
     action = webdriver.ActionChains(driver)
 
-    xrand = button.size["width"] * random.uniform(0.3, 0.7)
-    yrand = button.size["height"] * random.uniform(0.3, 0.7)
+    xrand = button.size["width"] * random.uniform(0.1, 0.9)
+    yrand = button.size["height"] * random.uniform(0.1, 0.9)
 
-    action.move_to_element_with_offset(button, xrand, yrand).pause(
-        random.uniform(0.001, 0.009)
-    ).click_and_hold().pause(random.uniform(0.001, 0.009)).release(button)
+    action.pause(random.uniform(0.001, 0.01)).move_to_element_with_offset(
+        button, xrand, yrand
+    ).pause(random.uniform(0.001, 0.01)).click_and_hold().pause(
+        random.uniform(0.001, 0.01)
+    ).release()
     action.perform()
 
 
@@ -117,10 +119,10 @@ def get_correct_answer(driver):
 
 
 def answer_question(driver, answers, question, execute_click):
-    choices = WebDriverWait(driver, 10).until(
-        EC.presence_of_all_elements_located((By.CLASS_NAME, "choice"))
+    choices = WebDriverWait(driver, 10, 0.01).until(
+        EC.visibility_of_all_elements_located((By.CLASS_NAME, "choice"))
     )
-
+    time.sleep(0.05)
     choice = get_choice(question, choices, answers)
     print(get_answer_text(choice))
     if execute_click:
@@ -136,12 +138,10 @@ def quiz_loop(driver, answers, execute_click):
     previous_question = None
     question_count = 0
     while question_count < 7:
-        question_element = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "question-text"))
+        question_element = WebDriverWait(driver, 10, 0.01).until(
+            EC.visibility_of_element_located((By.CLASS_NAME, "question-text"))
         )
-        if question_element == previous_question or not getattr(
-            question_element, "text"
-        ):
+        if question_element == previous_question:
             continue
         answer_question(driver, answers, question_element.text, execute_click)
         save_answers(answers)
@@ -155,6 +155,7 @@ def claim_prize(driver: webdriver.Chrome, name, email):
             (By.CSS_SELECTOR, "span.cta-box button.close-button")
         )
     )
+    time.sleep(1)
     button_click(driver, close_button)
 
     get_prize_button = WebDriverWait(driver, 60 * 60).until(
@@ -162,20 +163,26 @@ def claim_prize(driver: webdriver.Chrome, name, email):
             (By.CSS_SELECTOR, "span.prize-box button.main-button")
         )
     )
+    time.sleep(1)
     button_click(driver, get_prize_button)
 
     # Opens another tab
 
     time.sleep(1)
     driver.switch_to.window(driver.window_handles[-1])
+    time.sleep(1)
 
     name_input = WebDriverWait(driver, 10).until(
         EC.visibility_of_element_located((By.CSS_SELECTOR, "input[name='name']"))
     )
     name_input.send_keys(name)
 
+    time.sleep(0.5)
+
     email_input = driver.find_element_by_css_selector("input[name='email']")
     email_input.send_keys(email)
+
+    time.sleep(0.5)
 
     region_select = driver.find_element_by_css_selector("select[name='gameServer']")
     button_click(driver, region_select)
@@ -185,8 +192,12 @@ def claim_prize(driver: webdriver.Chrome, name, email):
     euw = driver.find_element_by_css_selector("option[value='Europe West (EUW)']")
     euw.click()
 
+    time.sleep(0.5)
+
     checkmark = driver.find_element_by_class_name("mc-checkmark")
     button_click(driver, checkmark)
+
+    time.sleep(0.5)
 
     submit_button = driver.find_element_by_css_selector("input.custom-button")
     button_click(driver, submit_button)
@@ -197,6 +208,8 @@ def run():
 
     driver = get_driver(url)
     answers = get_answers()
+
+    time.sleep(3)
 
     start_quiz(driver, player_name)
     quiz_loop(driver, answers, execute_click)
