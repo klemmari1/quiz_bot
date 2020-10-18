@@ -7,6 +7,7 @@ from os import path
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -30,7 +31,7 @@ def get_input_args():
     return url, player_name, status, execute_click, name, email
 
 
-def get_driver(url):
+def get_driver(url: str):
     options = webdriver.ChromeOptions()
 
     options.add_argument("start-maximized")
@@ -50,7 +51,7 @@ def get_driver(url):
     return driver
 
 
-def save_answers(answers):
+def save_answers(answers: dict):
     with open(ANSWER_FILE, "wb") as answer_file:
         pickle.dump(answers, answer_file)
 
@@ -63,7 +64,7 @@ def get_answers():
         return {}
 
 
-def button_click(driver, button):
+def button_click(driver: webdriver.Chrome, button: WebElement):
     action = webdriver.ActionChains(driver)
 
     xrand = button.size["width"] * random.uniform(0.1, 0.9)
@@ -77,7 +78,7 @@ def button_click(driver, button):
     action.perform()
 
 
-def start_quiz(driver, player_name, status):
+def start_quiz(driver: webdriver.Chrome, player_name: str, status: int):
     try:
         checkbox_element = WebDriverWait(driver, 10).until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, "span.mc-checkmark"))
@@ -103,11 +104,11 @@ def start_quiz(driver, player_name, status):
         button_click(driver, custom_button)
 
 
-def get_answer_text(answer_element):
+def get_answer_text(answer_element: WebElement):
     return answer_element.find_element_by_tag_name("span").text
 
 
-def get_choice(question, choices, answers):
+def get_choice(question: str, choices: list, answers: dict):
     answer = answers.get(question)
     if answer:
         for choice in choices:
@@ -117,14 +118,16 @@ def get_choice(question, choices, answers):
     return choices[0]
 
 
-def get_correct_answer(driver):
+def get_correct_answer(driver: webdriver.Chrome):
     correct_answer_element = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.CLASS_NAME, "is-correct"))
     )
     return get_answer_text(correct_answer_element)
 
 
-def answer_question(driver, answers, question, execute_click):
+def answer_question(
+    driver: webdriver.Chrome, answers: list, question: str, execute_click: int
+):
     choices = WebDriverWait(driver, 10, 0.01).until(
         EC.visibility_of_all_elements_located((By.CLASS_NAME, "choice"))
     )
@@ -139,7 +142,7 @@ def answer_question(driver, answers, question, execute_click):
     answers[question] = correct_answer
 
 
-def quiz_loop(driver, answers, execute_click):
+def quiz_loop(driver: webdriver.Chrome, answers: list, execute_click: int):
     previous_question = None
     question_count = 0
     while question_count < 7:
