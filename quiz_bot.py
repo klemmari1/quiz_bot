@@ -11,24 +11,23 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+
 ANSWER_FILE = "answers.pkl"
+WORD_FILE = "/usr/share/dict/words"
+WORDS = open(WORD_FILE).read().splitlines()
 
 
 def get_input_args():
     url = sys.argv[1]
-    player_name = sys.argv[2]
-    status = int(sys.argv[3])
-    execute_click = int(sys.argv[4])
-    name = sys.argv[5]
-    email = sys.argv[6]
+    status = int(sys.argv[2])
+    execute_click = int(sys.argv[3])
+    email = sys.argv[4]
     print("url: %s" % url)
-    print("player_name: %s" % player_name)
     print("status: %s" % status)
     print("execute_click: %s" % execute_click)
-    print("name: %s" % name)
     print("email: %s" % email)
 
-    return url, player_name, status, execute_click, name, email
+    return url, status, execute_click, email
 
 
 def get_driver(url: str):
@@ -64,6 +63,10 @@ def get_answers():
         return {}
 
 
+def get_random_word():
+    return random.choice(WORDS)
+
+
 def button_click(driver: webdriver.Chrome, button: WebElement):
     action = webdriver.ActionChains(driver)
 
@@ -78,7 +81,7 @@ def button_click(driver: webdriver.Chrome, button: WebElement):
     action.perform()
 
 
-def start_quiz(driver: webdriver.Chrome, player_name: str, status: int):
+def start_quiz(driver: webdriver.Chrome, status: int):
     try:
         checkbox_element = WebDriverWait(driver, 10).until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, "span.mc-checkmark"))
@@ -93,7 +96,7 @@ def start_quiz(driver: webdriver.Chrome, player_name: str, status: int):
     try:
         name_input = driver.find_element_by_class_name("name-input")
         button_click(driver, name_input)
-        name_input.send_keys(player_name)
+        name_input.send_keys(get_random_word())
     except NoSuchElementException:
         pass
 
@@ -166,7 +169,7 @@ def quiz_loop(driver: webdriver.Chrome, answers: list, execute_click: int):
     return 0
 
 
-def claim_prize(driver: webdriver.Chrome, name: str, email: str, status: int):
+def claim_prize(driver: webdriver.Chrome, email: str, status: int):
     try:
         if status == 0:
             close_button = WebDriverWait(driver, 30).until(
@@ -197,7 +200,7 @@ def claim_prize(driver: webdriver.Chrome, name: str, email: str, status: int):
     name_input = WebDriverWait(driver, 10).until(
         EC.visibility_of_element_located((By.CSS_SELECTOR, "input[name='name']"))
     )
-    name_input.send_keys(name)
+    name_input.send_keys(get_random_word())
 
     time.sleep(0.5)
 
@@ -228,7 +231,7 @@ def claim_prize(driver: webdriver.Chrome, name: str, email: str, status: int):
 
 
 def run():
-    url, player_name, status, execute_click, name, email = get_input_args()
+    url, status, execute_click, email = get_input_args()
 
     driver = get_driver(url)
     answers = get_answers()
@@ -237,13 +240,13 @@ def run():
         print("current status: %s" % status)
         time.sleep(3)
 
-        start_quiz(driver, player_name, status)
+        start_quiz(driver, status)
         if status > -2:
             status = quiz_loop(driver, answers, execute_click)
         print(driver.current_url)
 
         if status != -1:
-            status = claim_prize(driver, name, email, status)
+            status = claim_prize(driver, email, status)
         if status < 0:
             driver.refresh()
 
