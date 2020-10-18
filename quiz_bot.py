@@ -5,7 +5,7 @@ import time
 from os import path
 
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -16,16 +16,18 @@ ANSWER_FILE = "answers.pkl"
 def get_input_args():
     url = sys.argv[1]
     player_name = sys.argv[2]
-    execute_click = int(sys.argv[3])
-    name = sys.argv[4]
-    email = sys.argv[5]
+    status = int(sys.argv[3])
+    execute_click = int(sys.argv[4])
+    name = sys.argv[5]
+    email = sys.argv[6]
     print("url: %s" % url)
     print("player_name: %s" % player_name)
-    print("execute_click: %s" % str(execute_click))
+    print("status: %s" % status)
+    print("execute_click: %s" % execute_click)
     print("name: %s" % name)
     print("email: %s" % email)
 
-    return url, player_name, execute_click, name, email
+    return url, player_name, status, execute_click, name, email
 
 
 def get_driver(url):
@@ -67,7 +69,7 @@ def button_click(driver, button):
     xrand = button.size["width"] * random.uniform(0.1, 0.9)
     yrand = button.size["height"] * random.uniform(0.1, 0.9)
 
-    action.pause(random.uniform(0.001, 0.01)).move_to_element_with_offset(
+    action.pause(random.uniform(0.05, 0.1)).move_to_element_with_offset(
         button, xrand, yrand
     ).pause(random.uniform(0.001, 0.01)).click_and_hold().pause(
         random.uniform(0.001, 0.01)
@@ -75,14 +77,17 @@ def button_click(driver, button):
     action.perform()
 
 
-def start_quiz(driver, player_name):
-    checkbox_element = WebDriverWait(driver, 10).until(
-        EC.visibility_of_element_located((By.CSS_SELECTOR, "span.mc-checkmark"))
-    )
-    button_click(driver, checkbox_element)
+def start_quiz(driver, player_name, status):
+    try:
+        checkbox_element = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "span.mc-checkmark"))
+        )
+        button_click(driver, checkbox_element)
 
-    main_button = driver.find_elements_by_class_name("main-button")[0]
-    button_click(driver, main_button)
+        main_button = driver.find_elements_by_class_name("main-button")[0]
+        button_click(driver, main_button)
+    except TimeoutException:
+        pass
 
     try:
         name_input = driver.find_element_by_class_name("name-input")
@@ -91,10 +96,11 @@ def start_quiz(driver, player_name):
     except NoSuchElementException:
         pass
 
-    custom_button = WebDriverWait(driver, 10).until(
-        EC.visibility_of_element_located((By.CSS_SELECTOR, "button.custom-button"))
-    )
-    button_click(driver, custom_button)
+    if status > -3:
+        custom_button = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "button.custom-button"))
+        )
+        button_click(driver, custom_button)
 
 
 def get_answer_text(answer_element):
@@ -122,7 +128,6 @@ def answer_question(driver, answers, question, execute_click):
     choices = WebDriverWait(driver, 10, 0.01).until(
         EC.visibility_of_all_elements_located((By.CLASS_NAME, "choice"))
     )
-    time.sleep(0.05)
     choice = get_choice(question, choices, answers)
     print(get_answer_text(choice))
     if execute_click:
@@ -138,39 +143,48 @@ def quiz_loop(driver, answers, execute_click):
     previous_question = None
     question_count = 0
     while question_count < 7:
-        question_element = WebDriverWait(driver, 10, 0.01).until(
-            EC.visibility_of_element_located((By.CLASS_NAME, "question-text"))
-        )
+        try:
+            question_element = WebDriverWait(driver, 10, 0.01).until(
+                EC.visibility_of_element_located((By.CLASS_NAME, "question-text"))
+            )
+        except TimeoutException:
+            return -1
         if question_element == previous_question:
             continue
         answer_question(driver, answers, question_element.text, execute_click)
         save_answers(answers)
         previous_question = question_element
         question_count += 1
+    return 0
 
 
-def claim_prize(driver: webdriver.Chrome, name, email):
-    close_button = WebDriverWait(driver, 30).until(
-        EC.visibility_of_element_located(
-            (By.CSS_SELECTOR, "span.cta-box button.close-button")
+def claim_prize(driver: webdriver.Chrome, name: str, email: str, status: int):
+    try:
+        if status == 0:
+            close_button = WebDriverWait(driver, 30).until(
+                EC.visibility_of_element_located(
+                    (By.CSS_SELECTOR, "span.cta-box button.close-button")
+                )
+            )
+            time.sleep(1)
+            button_click(driver, close_button)
+
+        get_prize_button = WebDriverWait(driver, 60 * 60).until(
+            EC.visibility_of_element_located(
+                (By.CSS_SELECTOR, "span.prize-box button.main-button")
+            )
         )
-    )
-    time.sleep(1)
-    button_click(driver, close_button)
+        time.sleep(1)
+        button_click(driver, get_prize_button)
 
-    get_prize_button = WebDriverWait(driver, 60 * 60).until(
-        EC.visibility_of_element_located(
-            (By.CSS_SELECTOR, "span.prize-box button.main-button")
-        )
-    )
-    time.sleep(1)
-    button_click(driver, get_prize_button)
+    except TimeoutException:
+        return -2
 
     # Opens another tab
 
-    time.sleep(1)
+    time.sleep(2)
     driver.switch_to.window(driver.window_handles[-1])
-    time.sleep(1)
+    time.sleep(2)
 
     name_input = WebDriverWait(driver, 10).until(
         EC.visibility_of_element_located((By.CSS_SELECTOR, "input[name='name']"))
@@ -201,23 +215,30 @@ def claim_prize(driver: webdriver.Chrome, name, email):
 
     submit_button = driver.find_element_by_css_selector("input.custom-button")
     button_click(driver, submit_button)
+    time.sleep(5)
+    return 1
 
 
 def run():
-    url, player_name, execute_click, name, email = get_input_args()
+    url, player_name, status, execute_click, name, email = get_input_args()
 
     driver = get_driver(url)
     answers = get_answers()
 
-    time.sleep(3)
+    while status <= 0:
+        print("current status: %s" % status)
+        time.sleep(3)
 
-    start_quiz(driver, player_name)
-    quiz_loop(driver, answers, execute_click)
-    print(driver.current_url)
+        start_quiz(driver, player_name, status)
+        if status > -2:
+            status = quiz_loop(driver, answers, execute_click)
+        print("current url: %s" % driver.current_url)
 
-    claim_prize(driver, name, email)
+        if status != -1:
+            status = claim_prize(driver, name, email, status)
+        if status < 0:
+            driver.refresh()
 
-    time.sleep(5)
     driver.close()
 
 
