@@ -98,10 +98,15 @@ def start_quiz(driver: webdriver.Chrome, player_name: str, status: int):
         pass
 
     if status > -3:
-        custom_button = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "button.custom-button"))
-        )
-        button_click(driver, custom_button)
+        try:
+            custom_button = WebDriverWait(driver, 10).until(
+                EC.visibility_of_element_located(
+                    (By.CSS_SELECTOR, "button.custom-button")
+                )
+            )
+            button_click(driver, custom_button)
+        except TimeoutException:
+            pass
 
 
 def get_answer_text(answer_element: WebElement):
@@ -235,7 +240,7 @@ def run():
         start_quiz(driver, player_name, status)
         if status > -2:
             status = quiz_loop(driver, answers, execute_click)
-        print("current url: %s" % driver.current_url)
+        print(driver.current_url)
 
         if status != -1:
             status = claim_prize(driver, name, email, status)
