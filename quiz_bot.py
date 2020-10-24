@@ -11,7 +11,6 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-
 ANSWER_FILE = "answers.pkl"
 WORD_FILE = "/usr/share/dict/words"
 WORDS = open(WORD_FILE).read().splitlines()
@@ -30,6 +29,13 @@ def get_input_args():
     return url, status, execute_click, email
 
 
+def get_url_and_wait_for_frame(driver, url):
+    driver.get(url)
+    WebDriverWait(driver, 30).until(
+        EC.frame_to_be_available_and_switch_to_it((By.ID, "frame"))
+    )
+
+
 def get_driver(url: str):
     options = webdriver.ChromeOptions()
 
@@ -42,11 +48,7 @@ def get_driver(url: str):
     options.add_experimental_option("useAutomationExtension", False)
 
     driver = webdriver.Chrome(options=options)
-    driver.get(url)
-
-    WebDriverWait(driver, 5).until(
-        EC.frame_to_be_available_and_switch_to_it((By.ID, "frame"))
-    )
+    get_url_and_wait_for_frame(driver, url)
     return driver
 
 
@@ -188,46 +190,45 @@ def claim_prize(driver: webdriver.Chrome, email: str, status: int):
         time.sleep(1)
         button_click(driver, get_prize_button)
 
+        # Opens another tab
+
+        time.sleep(2)
+        driver.switch_to.window(driver.window_handles[-1])
+        time.sleep(2)
+
+        name_input = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "input[name='name']"))
+        )
+        name_input.send_keys(get_random_word())
+
+        time.sleep(0.5)
+
+        email_input = driver.find_element_by_css_selector("input[name='email']")
+        email_input.send_keys(email)
+
+        time.sleep(0.5)
+
+        region_select = driver.find_element_by_css_selector("select[name='gameServer']")
+        button_click(driver, region_select)
+
+        time.sleep(0.5)
+
+        euw = driver.find_element_by_css_selector("option[value='Europe West (EUW)']")
+        euw.click()
+
+        time.sleep(0.5)
+
+        checkmark = driver.find_element_by_class_name("mc-checkmark")
+        button_click(driver, checkmark)
+
+        time.sleep(0.5)
+
+        submit_button = driver.find_element_by_css_selector("input.custom-button")
+        button_click(driver, submit_button)
+        time.sleep(5)
+        return 1
     except TimeoutException:
         return -2
-
-    # Opens another tab
-
-    time.sleep(2)
-    driver.switch_to.window(driver.window_handles[-1])
-    time.sleep(2)
-
-    name_input = WebDriverWait(driver, 10).until(
-        EC.visibility_of_element_located((By.CSS_SELECTOR, "input[name='name']"))
-    )
-    name_input.send_keys(get_random_word())
-
-    time.sleep(0.5)
-
-    email_input = driver.find_element_by_css_selector("input[name='email']")
-    email_input.send_keys(email)
-
-    time.sleep(0.5)
-
-    region_select = driver.find_element_by_css_selector("select[name='gameServer']")
-    button_click(driver, region_select)
-
-    time.sleep(0.5)
-
-    euw = driver.find_element_by_css_selector("option[value='Europe West (EUW)']")
-    euw.click()
-
-    time.sleep(0.5)
-
-    checkmark = driver.find_element_by_class_name("mc-checkmark")
-    button_click(driver, checkmark)
-
-    time.sleep(0.5)
-
-    submit_button = driver.find_element_by_css_selector("input.custom-button")
-    button_click(driver, submit_button)
-    time.sleep(5)
-    return 1
 
 
 def run():
@@ -243,12 +244,15 @@ def run():
         start_quiz(driver, status)
         if status > -2:
             status = quiz_loop(driver, answers, execute_click)
-        print(driver.current_url)
+        current_url = driver.current_url
+        if "http" in current_url:
+            url = current_url
+        print(current_url)
 
         if status != -1:
             status = claim_prize(driver, email, status)
         if status < 0:
-            driver.refresh()
+            get_url_and_wait_for_frame(driver, url)
 
     driver.close()
 
