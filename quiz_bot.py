@@ -29,14 +29,18 @@ def get_input_args():
     return url, status, execute_click, email
 
 
-def get_url_and_wait_for_frame(driver, url):
+def get_url_and_wait_for_frame(driver: webdriver.Chrome, url: str, status: int = 0):
     driver.get(url)
-    WebDriverWait(driver, 30).until(
-        EC.frame_to_be_available_and_switch_to_it((By.ID, "frame"))
-    )
+    try:
+        WebDriverWait(driver, 30).until(
+            EC.frame_to_be_available_and_switch_to_it((By.ID, "frame"))
+        )
+    except TimeoutException:
+        return -3
+    return status
 
 
-def get_driver(url: str):
+def get_driver():
     options = webdriver.ChromeOptions()
 
     options.add_argument("start-maximized")
@@ -48,7 +52,6 @@ def get_driver(url: str):
     options.add_experimental_option("useAutomationExtension", False)
 
     driver = webdriver.Chrome(options=options)
-    get_url_and_wait_for_frame(driver, url)
     return driver
 
 
@@ -238,10 +241,11 @@ def claim_prize(driver: webdriver.Chrome, email: str, status: int):
 def run():
     url, status, execute_click, email = get_input_args()
 
-    driver = get_driver(url)
+    driver = get_driver()
     answers = get_answers()
 
     while status <= 0:
+        status = get_url_and_wait_for_frame(driver, url, status)
         print("current status: %s" % status)
         time.sleep(3)
 
@@ -255,8 +259,6 @@ def run():
 
         if status != -1:
             status = claim_prize(driver, email, status)
-        if status < 0:
-            get_url_and_wait_for_frame(driver, url)
 
     driver.close()
 
