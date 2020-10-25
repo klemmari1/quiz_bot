@@ -66,7 +66,11 @@ def get_answers():
 
 
 def get_random_word():
-    return random.choice(WORDS)
+    while True:
+        random_word = random.choice(WORDS)
+        if "'s" not in random_word:
+            break
+    return random_word.capitalize()
 
 
 def button_click(driver: webdriver.Chrome, button: WebElement):
