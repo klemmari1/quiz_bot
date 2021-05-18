@@ -1,9 +1,11 @@
+import datetime
 import pickle
 import random
 import sys
 import time
 from os import path
 
+from nordvpn_switcher import initialize_VPN, rotate_VPN, terminate_VPN
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
@@ -15,18 +17,20 @@ ANSWER_FILE = "answers.pkl"
 WORD_FILE = "/usr/share/dict/words"
 WORDS = open(WORD_FILE).read().splitlines()
 
+EMAILS = ".emails"
+USED_EMAILS = "used_emails.pkl"
+TODAY = datetime.date.today().isoformat()
+
 
 def get_input_args():
     url = sys.argv[1]
     status = int(sys.argv[2])
     execute_click = int(sys.argv[3])
-    email = sys.argv[4]
     print("url: %s" % url)
     print("status: %s" % status)
     print("execute_click: %s" % execute_click)
-    print("email: %s" % email)
 
-    return url, status, execute_click, email
+    return url, status, execute_click
 
 
 def get_url_and_wait_for_frame(driver: webdriver.Chrome, url: str, status: int = 0):
@@ -68,6 +72,46 @@ def get_answers():
         return {}
 
 
+def get_used_emails():
+    if path.isfile(USED_EMAILS):
+        with open(USED_EMAILS, "rb") as used_emails_file:
+            try:
+                email_dict = pickle.load(used_emails_file)
+            except EOFError:
+                email_dict = {}
+    else:
+        email_dict = {}
+
+    return email_dict
+
+
+def save_email(email):
+    email_dict = get_used_emails()
+
+    if TODAY not in email_dict:
+        email_dict[TODAY] = []
+    email_dict[TODAY].append(email)
+
+    with open(USED_EMAILS, "wb") as used_emails_file:
+        pickle.dump(email_dict, used_emails_file)
+
+
+def get_emails():
+    if path.isfile(EMAILS):
+        with open(EMAILS, "r") as emails_file:
+            emails = emails_file.read().splitlines()
+
+        used_emails = []
+        used_emails_dict = get_used_emails()
+        if TODAY in used_emails_dict:
+            used_emails = used_emails_dict[TODAY]
+
+        emails = [email for email in emails if email not in used_emails]
+        return emails
+    else:
+        return []
+
+
 def get_random_word():
     while True:
         random_word = random.choice(WORDS)
@@ -82,10 +126,10 @@ def button_click(driver: webdriver.Chrome, button: WebElement):
     xrand = button.size["width"] * random.uniform(0.1, 0.9)
     yrand = button.size["height"] * random.uniform(0.1, 0.9)
 
-    action.pause(random.uniform(0.05, 0.1)).move_to_element_with_offset(
+    action.pause(random.uniform(0.8, 2)).move_to_element_with_offset(
         button, xrand, yrand
-    ).pause(random.uniform(0.001, 0.01)).click_and_hold().pause(
-        random.uniform(0.001, 0.01)
+    ).pause(random.uniform(0.1, 0.5)).click_and_hold().pause(
+        random.uniform(0.1, 0.2)
     ).release()
     action.perform()
 
@@ -178,7 +222,9 @@ def quiz_loop(driver: webdriver.Chrome, answers: list, execute_click: int):
     return 0
 
 
-def claim_prize(driver: webdriver.Chrome, email: str, status: int):
+def claim_prize(driver: webdriver.Chrome, status: int):
+    close_button = None
+
     try:
         if status == 0:
             close_button = WebDriverWait(driver, 30).until(
@@ -186,60 +232,84 @@ def claim_prize(driver: webdriver.Chrome, email: str, status: int):
                     (By.CSS_SELECTOR, "span.cta-box button.close-button")
                 )
             )
-            time.sleep(1)
-            button_click(driver, close_button)
+    except TimeoutException:
+        return -2
 
-        get_prize_button = WebDriverWait(driver, 60 * 60).until(
+    time.sleep(1)
+
+    if close_button:
+        button_click(driver, close_button)
+
+    try:
+        get_prize_button = WebDriverWait(driver, 5).until(
             EC.visibility_of_element_located(
                 (By.CSS_SELECTOR, "span.prize-box button.main-button")
             )
         )
-        time.sleep(1)
-        button_click(driver, get_prize_button)
-
-        # Opens another tab
-
-        time.sleep(2)
-        driver.switch_to.window(driver.window_handles[-1])
-        time.sleep(2)
-
-        name_input = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "input[name='name']"))
-        )
-        name_input.send_keys(get_random_word())
-
-        time.sleep(0.5)
-
-        email_input = driver.find_element_by_css_selector("input[name='email']")
-        email_input.send_keys(email)
-
-        time.sleep(0.5)
-
-        region_select = driver.find_element_by_css_selector("select[name='gameServer']")
-        button_click(driver, region_select)
-
-        time.sleep(0.5)
-
-        euw = driver.find_element_by_css_selector("option[value='Europe West (EUW)']")
-        euw.click()
-
-        time.sleep(0.5)
-
-        checkmark = driver.find_element_by_class_name("mc-checkmark")
-        button_click(driver, checkmark)
-
-        time.sleep(0.5)
-
-        submit_button = driver.find_element_by_css_selector("input.custom-button")
-        button_click(driver, submit_button)
-        time.sleep(5)
+    except:
         return 1
-    except TimeoutException:
-        return -2
+
+    time.sleep(1)
+    button_click(driver, get_prize_button)
+
+    # Opens another tab
+
+    time.sleep(2)
+    driver.switch_to.window(driver.window_handles[-1])
+    time.sleep(2)
+
+    name_input = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.CSS_SELECTOR, "input[name='name']"))
+    )
+    name_input.send_keys(get_random_word())
+
+    time.sleep(0.5)
+
+    emails = get_emails()
+    if len(emails):
+        email = emails[0]
+    else:
+        return 1
+
+    email_input = driver.find_element_by_css_selector("input[name='email']")
+    email_input.send_keys(email)
+
+    time.sleep(0.5)
+
+    region_select = driver.find_element_by_css_selector("select[name='gameServer']")
+    button_click(driver, region_select)
+
+    time.sleep(0.5)
+
+    euw = driver.find_element_by_css_selector("option[value='Europe West (EUW)']")
+    euw.click()
+
+    time.sleep(0.5)
+
+    checkmark = driver.find_element_by_class_name("mc-checkmark")
+    button_click(driver, checkmark)
+
+    time.sleep(0.5)
+
+    submit_button = driver.find_element_by_css_selector("input.custom-button")
+    button_click(driver, submit_button)
+
+    save_email(email)
+
+    time.sleep(5)
+    return 1
 
 
 def run():
-    url, status, execute_click, email = get_input_args()
+
+    emails = get_emails()
+    if not emails:
+        return
+
+    initialize_VPN(save=1, area_input=["complete rotation"], skip_settings=1)
+    rotate_VPN()
+
+    url, status, execute_click = get_input_args()
 
     driver = get_driver()
     answers = get_answers()
@@ -258,9 +328,10 @@ def run():
         print(current_url)
 
         if status != -1:
-            status = claim_prize(driver, email, status)
+            status = claim_prize(driver, status)
 
     driver.close()
+    terminate_VPN()
 
 
 if __name__ == "__main__":
