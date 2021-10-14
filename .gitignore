@@ -131,8 +131,10 @@ dmypy.json
 .idea/
 *.out
 .vscode/
-.emails
 used_emails.pkl
 crontab.txt
 crontab2.txt
+used_codes.pkl
+new_codes_*
+emails.pkl
 settings_nordvpn.txt

@@ -1,5 +1,6 @@
 import pprint
 
-from quiz_bot import get_emails
+from quiz_bot import get_unused_emails
 
-pprint.pprint(get_emails())
+emails = get_unused_emails()
+pprint.pprint([email[0] for email in emails])
