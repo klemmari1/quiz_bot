@@ -14,6 +14,10 @@ from babel.numbers import parse_number
 from nordvpn_switcher import initialize_VPN, rotate_VPN, terminate_VPN
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.actions import interaction
+from selenium.webdriver.common.actions.action_builder import ActionBuilder
+from selenium.webdriver.common.actions.pointer_input import PointerInput
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
@@ -27,6 +31,8 @@ INPUT_ARGS = "input.pkl"
 EMAILS = "emails.pkl"
 USED_EMAILS = "used_emails.pkl"
 ANSWER_FILE = "answers.pkl"
+
+WAIT_FOR_VERIFICATION_CODE_SECONDS = 60
 
 
 def load_input_args() -> list:
@@ -79,19 +85,29 @@ def switch_to_frame2(driver: webdriver.Chrome):
 def get_driver():
     options = webdriver.ChromeOptions()
 
-    options.add_argument("start-maximized")
+    # mobile_emulation = {
+    #     "deviceMetrics": { "width": 360, "height": 640, "pixelRatio": 3.0 },
+    #     "userAgent": "Mozilla/5.0 (Linux; Android 4.2.1; en-us; Nexus 5 Build/JOP40D) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19",
+    # }
+
+    options.add_argument("--window-size=360,640")
     options.add_argument("--disable-extensions")
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("--log-level=OFF")
     options.add_argument("disable-infobars")
+    options.add_argument(
+        "--user-agent=Mozilla/5.0 (Linux; Android 4.2.1; en-us; Nexus 5 Build/JOP40D) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19"
+    )
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option("useAutomationExtension", False)
+    # options.add_experimental_option("useAutomationExtension", False)
+    # options.add_experimental_option("mobileEmulation", mobile_emulation)
 
     chromedriver = ""
+    dir_path = path.dirname(path.realpath(__file__))
     if path.isfile("chromedriver"):
-        chromedriver = "chromedriver"
+        chromedriver = path.join(dir_path, "chromedriver")
     elif path.isfile("chromedriver.exe"):
-        chromedriver = "chromedriver.exe"
+        chromedriver = path.join(dir_path, "chromedriver.exe")
 
     if chromedriver:
         driver = webdriver.Chrome(options=options, executable_path=chromedriver)
@@ -174,18 +190,32 @@ def get_random_word():
     return random_word.capitalize()
 
 
-def button_click(driver: webdriver.Chrome, button: WebElement):
-    action = webdriver.ActionChains(driver)
+def button_click(driver: webdriver.Chrome, button: WebElement, pre_pause=True):
+    xrand = button.size["width"] * random.uniform(0.4, 0.6)
+    yrand = button.size["height"] * random.uniform(0.4, 0.6)
 
-    xrand = button.size["width"] * random.uniform(0.3, 0.7)
-    yrand = button.size["height"] * random.uniform(0.3, 0.7)
+    # action = webdriver.ActionChains(driver)
 
-    action.pause(random.uniform(0.7, 1.3)).move_to_element_with_offset(
-        button, xrand, yrand
-    ).pause(random.uniform(0.1, 0.5)).click_and_hold().pause(
-        random.uniform(0.1, 0.15)
-    ).release()
-    action.perform()
+    # action.pause(random.uniform(0.8, 1.3)).move_to_element_with_offset(
+    #     button, xrand, yrand
+    # ).pause(random.uniform(0.2, 0.5)).click_and_hold().pause(
+    #     random.uniform(0.1, 0.2)
+    # ).release()
+    # action.perform()
+
+    actions = ActionChains(driver)
+    actions.w3c_actions = ActionBuilder(
+        driver, mouse=PointerInput(interaction.POINTER_TOUCH, "touch")
+    )
+
+    if pre_pause:
+        actions.w3c_actions.pointer_action.pause(random.uniform(0.5, 1.0))
+    actions.w3c_actions.pointer_action.move_to(button, xrand, yrand)
+    actions.w3c_actions.pointer_action.pause(random.uniform(0.2, 0.5))
+    actions.w3c_actions.pointer_action.click_and_hold()
+    actions.w3c_actions.pointer_action.pause(random.uniform(0.1, 0.2))
+    actions.w3c_actions.pointer_action.release()
+    actions.w3c_actions.perform()
 
 
 def get_verification_code(email_address, password, code_sender):
@@ -243,7 +273,7 @@ def input_email_and_accept_terms(driver: webdriver.Chrome, email_addr: str):
     for checkbox_element in checkbox_elements:
         button_click(driver, checkbox_element)
 
-    main_button = driver.find_elements_by_class_name("main-button")[0]
+    main_button = driver.find_elements(by=By.CLASS_NAME, value="main-button")[0]
     button_click(driver, main_button)
 
 
@@ -266,7 +296,7 @@ def start_quiz(driver: webdriver.Chrome, status: int):
         )
         button_click(driver, checkbox_element)
 
-        main_button = driver.find_elements_by_class_name("main-button")[0]
+        main_button = driver.find_elements(by=By.CLASS_NAME, value="main-button")[0]
         button_click(driver, main_button)
 
         name_input = WebDriverWait(driver, 2).until(
@@ -376,7 +406,7 @@ def play_simon_says(driver: webdriver.Chrome, blinks):
             return False
 
     for square in correct_squares:
-        button_click(driver, square)
+        button_click(driver, square, pre_pause=False)
 
     return True
 
@@ -412,7 +442,7 @@ def simon_says_loop(driver: webdriver.Chrome, queue, target_score: int = 3000) -
         score_int = parse_number(score, locale="de_DE")
 
         if score_int > target_score:
-            time.sleep(40)
+            time.sleep(60)
             break
 
         blinks += 1
@@ -429,7 +459,7 @@ def press_mole_buttons(driver: webdriver.Chrome):
                     (By.CSS_SELECTOR, "div.mole-container button.shown:not(.golden)")
                 )
             )
-            mole_button.click()
+            button_click(driver, mole_button, pre_pause=False)
         except:
             break
 
@@ -445,7 +475,7 @@ def press_golden_button(driver: webdriver.Chrome):
 
             now = time.time()
             while time.time() - now < 2.5:
-                golden_button.click()
+                button_click(driver, golden_button, pre_pause=False)
                 time.sleep(0.25)
 
             time.sleep(1)
@@ -545,27 +575,31 @@ def claim_prize(driver: webdriver.Chrome, email_addr: str):
 
     time.sleep(0.5)
 
-    email_input = driver.find_element_by_css_selector("input[name='email']")
+    email_input = driver.find_element(by=By.CSS_SELECTOR, value="input[name='email']")
     email_input.send_keys(email_addr)
 
     time.sleep(0.5)
 
-    region_select = driver.find_element_by_css_selector("select[name='gameServer']")
+    region_select = driver.find_element(
+        by=By.CSS_SELECTOR, value="select[name='gameServer']"
+    )
     button_click(driver, region_select)
 
     time.sleep(0.5)
 
-    euw = driver.find_element_by_css_selector("option[value='Europe West (EUW)']")
+    euw = driver.find_element(
+        by=By.CSS_SELECTOR, value="option[value='Europe West (EUW)']"
+    )
     euw.click()
 
     time.sleep(0.5)
 
-    checkmark = driver.find_element_by_class_name("mc-checkmark")
+    checkmark = driver.find_element(by=By.CLASS_NAME, value="mc-checkmark")
     button_click(driver, checkmark)
 
     time.sleep(0.5)
 
-    submit_button = driver.find_element_by_css_selector("input.custom-button")
+    submit_button = driver.find_element(by=By.CSS_SELECTOR, value="input.custom-button")
     button_click(driver, submit_button)
 
     save_email(email_addr)
@@ -595,7 +629,7 @@ def run():
         driver.get(url)
 
         if status == -1:
-            claim_prize(driver, email_addr)
+            status = claim_prize(driver, email_addr)
 
         print("current status: %s" % status)
         time.sleep(2)
@@ -616,7 +650,7 @@ def run():
             input_email_and_accept_terms(driver, email_addr)
 
             # Wait for email to arrive
-            time.sleep(6)
+            time.sleep(WAIT_FOR_VERIFICATION_CODE_SECONDS)
 
             verification_code = get_verification_code(
                 verification_code_email, password, code_sender
@@ -627,6 +661,11 @@ def run():
 
         time.sleep(2)
         switch_to_frame2(driver)
+
+        if status == -2:
+            status = claim_prize(driver, email_addr)
+            break
+
         start_quiz(driver, status)
 
         if status > -2:
@@ -640,7 +679,8 @@ def run():
             status = claim_prize(driver, email_addr)
 
     driver.close()
-    terminate_VPN()
+    if use_vpn:
+        terminate_VPN()
 
 
 if __name__ == "__main__":

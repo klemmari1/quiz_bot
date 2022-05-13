@@ -10,13 +10,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from quiz_bot import (
     button_click,
     enter_verification_code,
+    game_loop,
     get_answers,
     get_driver,
     get_emails,
     get_input_args,
     get_verification_code,
     input_email_and_accept_terms,
-    game_loop,
     switch_to_frame,
     switch_to_frame2,
 )
