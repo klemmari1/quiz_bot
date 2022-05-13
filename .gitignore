@@ -138,3 +138,5 @@ used_codes.pkl
 new_codes_*
 emails.pkl
 settings_nordvpn.txt
+chromedriver
+chromedriver.exe
