@@ -1,11 +1,5 @@
 # quiz_bot
 
-To run this, you need [ChromeDriver](https://chromedriver.chromium.org/getting-started).
-
-1. Download the correct version for your OS and browser version.
-
-2. Move the downloaded chromedriver in this folder or set to PATH.
-
 ## How to use
 
 1. Create a virtual environment.

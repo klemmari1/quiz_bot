@@ -22,6 +22,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
 WORD_FILE = "/usr/share/dict/words"
 WORDS = open(WORD_FILE).read().splitlines()
@@ -102,17 +104,7 @@ def get_driver():
     # options.add_experimental_option("useAutomationExtension", False)
     # options.add_experimental_option("mobileEmulation", mobile_emulation)
 
-    chromedriver = ""
-    dir_path = path.dirname(path.realpath(__file__))
-    if path.isfile("chromedriver"):
-        chromedriver = path.join(dir_path, "chromedriver")
-    elif path.isfile("chromedriver.exe"):
-        chromedriver = path.join(dir_path, "chromedriver.exe")
-
-    if chromedriver:
-        driver = webdriver.Chrome(options=options, executable_path=chromedriver)
-    else:
-        driver = webdriver.Chrome(options=options)
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     return driver
 
 
