@@ -182,7 +182,7 @@ def get_random_word():
     return random_word.capitalize()
 
 
-def button_click(driver: webdriver.Chrome, button: WebElement, pre_pause=True):
+def button_click(driver: webdriver.Chrome, button: WebElement, pause=True):
     xrand = button.size["width"] * random.uniform(0.4, 0.6)
     yrand = button.size["height"] * random.uniform(0.4, 0.6)
 
@@ -200,12 +200,14 @@ def button_click(driver: webdriver.Chrome, button: WebElement, pre_pause=True):
         driver, mouse=PointerInput(interaction.POINTER_TOUCH, "touch")
     )
 
-    if pre_pause:
+    if pause:
         actions.w3c_actions.pointer_action.pause(random.uniform(0.5, 1.0))
     actions.w3c_actions.pointer_action.move_to(button, xrand, yrand)
-    actions.w3c_actions.pointer_action.pause(random.uniform(0.2, 0.5))
+    if pause:
+        actions.w3c_actions.pointer_action.pause(random.uniform(0.2, 0.5))
     actions.w3c_actions.pointer_action.click_and_hold()
-    actions.w3c_actions.pointer_action.pause(random.uniform(0.1, 0.2))
+    if pause:
+        actions.w3c_actions.pointer_action.pause(random.uniform(0.1, 0.2))
     actions.w3c_actions.pointer_action.release()
     actions.w3c_actions.perform()
 
@@ -398,7 +400,7 @@ def play_simon_says(driver: webdriver.Chrome, blinks):
             return False
 
     for square in correct_squares:
-        button_click(driver, square, pre_pause=False)
+        button_click(driver, square, pause=False)
 
     return True
 
@@ -434,7 +436,7 @@ def simon_says_loop(driver: webdriver.Chrome, queue, target_score: int = 3000) -
         score_int = parse_number(score, locale="de_DE")
 
         if score_int > target_score:
-            time.sleep(60)
+            time.sleep(30)
             break
 
         blinks += 1
@@ -451,7 +453,7 @@ def press_mole_buttons(driver: webdriver.Chrome):
                     (By.CSS_SELECTOR, "div.mole-container button.shown:not(.golden)")
                 )
             )
-            button_click(driver, mole_button, pre_pause=False)
+            button_click(driver, mole_button, pause=False)
         except:
             break
 
@@ -467,7 +469,7 @@ def press_golden_button(driver: webdriver.Chrome):
 
             now = time.time()
             while time.time() - now < 2.5:
-                button_click(driver, golden_button, pre_pause=False)
+                button_click(driver, golden_button, pause=False)
                 time.sleep(0.25)
 
             time.sleep(1)
@@ -545,7 +547,7 @@ def game_loop(driver: webdriver.Chrome, answers: dict) -> int:
 
 def claim_prize(driver: webdriver.Chrome, email_addr: str):
     try:
-        claim_prize_button = WebDriverWait(driver, 5).until(
+        claim_prize_button = WebDriverWait(driver, 50).until(
             EC.visibility_of_element_located(
                 (By.CSS_SELECTOR, "div.prize-overlay button.main-button")
             )
@@ -617,59 +619,61 @@ def run():
     driver = get_driver()
     answers = get_answers()
 
-    while status <= 0:
-        driver.get(url)
+    try:
+        while status <= 0:
+            driver.get(url)
 
-        if status == -1:
-            status = claim_prize(driver, email_addr)
+            if status == -1:
+                status = claim_prize(driver, email_addr)
 
-        print("current status: %s" % status)
-        time.sleep(2)
+            print("current status: %s" % status)
+            time.sleep(2)
 
-        if use_vpn:
-            try:
-                switch_to_frame(driver)
-                skip_button = WebDriverWait(driver, 5).until(
-                    EC.visibility_of_element_located(
-                        (By.CSS_SELECTOR, "button.bg-transparent")
+            if use_vpn:
+                try:
+                    switch_to_frame(driver)
+                    skip_button = WebDriverWait(driver, 5).until(
+                        EC.visibility_of_element_located(
+                            (By.CSS_SELECTOR, "button.bg-transparent")
+                        )
                     )
+                    button_click(driver, skip_button)
+                except:
+                    pass
+            elif status != -1:
+                switch_to_frame(driver)
+                input_email_and_accept_terms(driver, email_addr)
+
+                # Wait for email to arrive
+                time.sleep(WAIT_FOR_VERIFICATION_CODE_SECONDS)
+
+                verification_code = get_verification_code(
+                    verification_code_email, password, code_sender
                 )
-                button_click(driver, skip_button)
-            except:
-                pass
-        elif status != -1:
-            switch_to_frame(driver)
-            input_email_and_accept_terms(driver, email_addr)
 
-            # Wait for email to arrive
-            time.sleep(WAIT_FOR_VERIFICATION_CODE_SECONDS)
+                switch_to_frame(driver)
+                enter_verification_code(driver, verification_code)
 
-            verification_code = get_verification_code(
-                verification_code_email, password, code_sender
-            )
+            time.sleep(2)
+            switch_to_frame2(driver)
 
-            switch_to_frame(driver)
-            enter_verification_code(driver, verification_code)
+            if status == -2:
+                status = claim_prize(driver, email_addr)
+                break
 
-        time.sleep(2)
-        switch_to_frame2(driver)
+            start_quiz(driver, status)
 
-        if status == -2:
-            status = claim_prize(driver, email_addr)
-            break
+            if status > -2:
+                status = game_loop(driver, answers)
 
-        start_quiz(driver, status)
+            current_url = driver.current_url
+            if "http" in current_url:
+                url = current_url
 
-        if status > -2:
-            status = game_loop(driver, answers)
-
-        current_url = driver.current_url
-        if "http" in current_url:
-            url = current_url
-
-        if status != -1:
-            status = claim_prize(driver, email_addr)
-
+            if status != -1:
+                status = claim_prize(driver, email_addr)
+    except:
+        pass
     driver.close()
     if use_vpn:
         terminate_VPN()
