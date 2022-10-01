@@ -25,7 +25,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
-WORD_FILE = "/usr/share/dict/words"
+WORD_FILE = "words"
 WORDS = open(WORD_FILE).read().splitlines()
 TODAY = datetime.date.today().isoformat()
 
@@ -400,7 +400,7 @@ def play_simon_says(driver: webdriver.Chrome, blinks):
             return False
 
     for square in correct_squares:
-        button_click(driver, square, pause=False)
+        button_click(driver, square)
 
     return True
 
@@ -454,6 +454,7 @@ def press_mole_buttons(driver: webdriver.Chrome):
                 )
             )
             button_click(driver, mole_button, pause=False)
+            time.sleep(0.25)
         except:
             break
 
@@ -605,6 +606,7 @@ def claim_prize(driver: webdriver.Chrome, email_addr: str):
 def run():
     email_addr, verification_code_email, password = get_email()
     if not email_addr:
+        print("No email addresses left to use")
         return
     print(email_addr)
 
@@ -612,7 +614,7 @@ def run():
 
     if use_vpn:
         initialize_VPN(
-            save=1, area_input=["random countries europe 30"], skip_settings=1
+            save=1, area_input=["random countries europe 25"], skip_settings=1,
         )
         rotate_VPN()
 
