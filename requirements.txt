@@ -49,7 +49,7 @@ lxml==4.8.0
     # via nordvpn-switcher
 mypy-extensions==0.4.3
     # via black
-nordvpn-switcher==0.2.9
+nordvpn-switcher==0.3.0
     # via -r requirements.in
 outcome==1.1.0
     # via trio
