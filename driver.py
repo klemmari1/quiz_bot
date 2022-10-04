@@ -1,8 +1,8 @@
 from fake_useragent import UserAgent
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium_stealth import stealth
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.utils import ChromeType
 
 
 def get_driver():
@@ -25,9 +25,16 @@ def get_driver():
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
 
-    driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()), options=options
-    )
+    # driver_path = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+    driver_path = ChromeDriverManager().install()
+
+    # Anti bot-detection
+    with open(driver_path, "rb") as f:
+        new_file = f.read().replace(b"$cdc", b"$qbt")
+    with open(driver_path, "wb") as f:
+        f.write(new_file)
+
+    driver = webdriver.Chrome(driver_path, options=options)
 
     stealth(
         driver,
@@ -38,12 +45,5 @@ def get_driver():
         renderer="Intel Iris OpenGL Engine",
         fix_hairline=True,
     )
-
-    # from webdriver_manager.firefox import GeckoDriverManager
-    # profile = webdriver.FirefoxProfile()
-    # profile.set_preference("general.useragent.override", ua.firefox)
-    # driver = webdriver.Firefox(
-    #     service=Service(GeckoDriverManager().install()), firefox_profile=profile, options=options
-    # )
 
     return driver
