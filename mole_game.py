@@ -15,7 +15,7 @@ def press_mole_buttons(driver: webdriver.Chrome):
                     (By.CSS_SELECTOR, "div.mole-container button.shown:not(.golden)")
                 )
             )
-            time.sleep(0.15)
+            time.sleep(0.2)
             mole_button.click()
             time.sleep(0.15)
         except:
@@ -33,7 +33,7 @@ def press_golden_button(driver: webdriver.Chrome):
 
             now = time.time()
             while time.time() - now < 2:
-                time.sleep(0.15)
+                time.sleep(0.2)
                 golden_button.click()
                 time.sleep(0.15)
 
