@@ -8,7 +8,7 @@ from selenium.webdriver.common.actions.pointer_input import PointerInput
 from selenium.webdriver.remote.webelement import WebElement
 
 
-def button_click(driver: webdriver.Chrome, button: WebElement, pause=True):
+def button_click(driver: webdriver.Firefox, button: WebElement, pause=True):
     xrand = button.size["width"] * random.uniform(0.4, 0.6)
     yrand = button.size["height"] * random.uniform(0.4, 0.6)
 

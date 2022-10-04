@@ -9,7 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from button import button_click
 
 
-def press_mole_buttons(driver: webdriver.Chrome):
+def press_mole_buttons(driver: webdriver.Firefox):
     while True:
         try:
             mole_button = WebDriverWait(driver, 2, 0.0000001).until(
@@ -23,7 +23,7 @@ def press_mole_buttons(driver: webdriver.Chrome):
             break
 
 
-def press_golden_button(driver: webdriver.Chrome):
+def press_golden_button(driver: webdriver.Firefox):
     while True:
         try:
             golden_button = WebDriverWait(driver, 10, 0.000001).until(
@@ -42,7 +42,7 @@ def press_golden_button(driver: webdriver.Chrome):
             break
 
 
-def mole_game_loop(driver: webdriver.Chrome, queue) -> int:
+def mole_game_loop(driver: webdriver.Firefox, queue) -> int:
     try:
         WebDriverWait(driver, 2, 0.0001).until(
             EC.visibility_of_element_located(

@@ -40,14 +40,14 @@ def get_choice(question: str, choices: list, answers: dict):
     return choices[0]
 
 
-def get_correct_answer(driver: webdriver.Chrome):
+def get_correct_answer(driver: webdriver.Firefox):
     correct_answer_element = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.CLASS_NAME, "is-correct"))
     )
     return get_answer_text(correct_answer_element)
 
 
-def answer_question(driver: webdriver.Chrome, answers: list, question: str):
+def answer_question(driver: webdriver.Firefox, answers: list, question: str):
     choices = WebDriverWait(driver, 10, 0.01).until(
         EC.visibility_of_all_elements_located((By.CLASS_NAME, "choice"))
     )
@@ -59,7 +59,7 @@ def answer_question(driver: webdriver.Chrome, answers: list, question: str):
     answers[question] = correct_answer
 
 
-def quiz_loop(driver: webdriver.Chrome, queue) -> int:
+def quiz_loop(driver: webdriver.Firefox, queue) -> int:
     answers = get_answers()
     previous_question = None
     try:

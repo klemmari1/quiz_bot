@@ -1,5 +1,6 @@
 babel
 black
+fake-useragent
 isort
 nordvpn-switcher
 pip-tools

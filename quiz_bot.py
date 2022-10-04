@@ -13,13 +13,12 @@ from queue import Queue
 from nordvpn_switcher import initialize_VPN, rotate_VPN, terminate_VPN
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from webdriver_manager.chrome import ChromeDriverManager
 
 from button import button_click
+from driver import get_driver
 from mole_game import mole_game_loop
 from quiz_game import quiz_loop
 from simon_says import simon_says_loop
@@ -61,7 +60,7 @@ def get_input_args():
     return use_vpn, status, url, code_sender
 
 
-def switch_to_frame(driver: webdriver.Chrome):
+def switch_to_frame(driver: webdriver.Firefox):
     driver.switch_to.default_content()
 
     WebDriverWait(driver, 30).until(
@@ -72,7 +71,7 @@ def switch_to_frame(driver: webdriver.Chrome):
     )
 
 
-def switch_to_frame2(driver: webdriver.Chrome):
+def switch_to_frame2(driver: webdriver.Firefox):
     driver.switch_to.default_content()
 
     WebDriverWait(driver, 30).until(
@@ -81,32 +80,6 @@ def switch_to_frame2(driver: webdriver.Chrome):
     WebDriverWait(driver, 30).until(
         EC.frame_to_be_available_and_switch_to_it((By.ID, "frame"))
     )
-
-
-def get_driver():
-    options = webdriver.ChromeOptions()
-
-    # mobile_emulation = {
-    #     "deviceMetrics": { "width": 360, "height": 640, "pixelRatio": 3.0 },
-    #     "userAgent": "Mozilla/5.0 (Linux; Android 4.2.1; en-us; Nexus 5 Build/JOP40D) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19",
-    # }
-
-    options.add_argument("--window-size=360,640")
-    options.add_argument("--disable-extensions")
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("--log-level=OFF")
-    options.add_argument("disable-infobars")
-    options.add_argument(
-        "--user-agent=Mozilla/5.0 (Linux; Android 4.2.1; en-us; Nexus 5 Build/JOP40D) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19"
-    )
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    # options.add_experimental_option("useAutomationExtension", False)
-    # options.add_experimental_option("mobileEmulation", mobile_emulation)
-
-    driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()), options=options
-    )
-    return driver
 
 
 def get_used_emails():
@@ -211,7 +184,7 @@ def get_verification_code(email_address, password, code_sender):
     return verification_code
 
 
-def input_email_and_accept_terms(driver: webdriver.Chrome, email_addr: str):
+def input_email_and_accept_terms(driver: webdriver.Firefox, email_addr: str):
     email_input = WebDriverWait(driver, 10).until(
         EC.visibility_of_element_located((By.CSS_SELECTOR, "input.form-control"))
     )
@@ -229,7 +202,7 @@ def input_email_and_accept_terms(driver: webdriver.Chrome, email_addr: str):
     button_click(driver, main_button)
 
 
-def enter_verification_code(driver: webdriver.Chrome, verification_code: str):
+def enter_verification_code(driver: webdriver.Firefox, verification_code: str):
     try:
         WebDriverWait(driver, 10).until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, "input.otp-input"))
@@ -241,7 +214,7 @@ def enter_verification_code(driver: webdriver.Chrome, verification_code: str):
         pass
 
 
-def start_quiz(driver: webdriver.Chrome, status: int):
+def start_quiz(driver: webdriver.Firefox, status: int):
     try:
         checkbox_element = WebDriverWait(driver, 10).until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, "span.mc-checkmark"))
@@ -271,7 +244,7 @@ def start_quiz(driver: webdriver.Chrome, status: int):
             pass
 
 
-def game_loop(driver: webdriver.Chrome) -> int:
+def game_loop(driver: webdriver.Firefox) -> int:
     queue = Queue()
     quiz = threading.Thread(
         target=quiz_loop,
@@ -309,7 +282,7 @@ def game_loop(driver: webdriver.Chrome) -> int:
     return max(statuses)
 
 
-def claim_prize(driver: webdriver.Chrome, email_addr: str):
+def claim_prize(driver: webdriver.Firefox, email_addr: str):
     try:
         claim_prize_button = WebDriverWait(driver, 50).until(
             EC.visibility_of_element_located(

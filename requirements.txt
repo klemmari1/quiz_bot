@@ -36,6 +36,8 @@ cryptography==37.0.2
     # via
     #   pyopenssl
     #   urllib3
+fake-useragent==0.1.11
+    # via -r requirements.in
 h11==0.13.0
     # via wsproto
 idna==3.3
