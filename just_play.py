@@ -22,7 +22,7 @@ from quiz_bot import (
 )
 
 
-def push_replay_button(driver: webdriver.Firefox):
+def push_replay_button(driver: webdriver.Chrome):
     try:
         close_button = WebDriverWait(driver, 5).until(
             EC.visibility_of_element_located(

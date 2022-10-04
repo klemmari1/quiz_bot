@@ -140,3 +140,9 @@ emails.pkl
 settings_nordvpn.txt
 chromedriver
 chromedriver.exe
+
+# Windows
+Scripts/
+Include/
+Lib/
+pyvenv.cfg

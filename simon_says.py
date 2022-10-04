@@ -9,7 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from button import button_click
 
 
-def play_simon_says(driver: webdriver.Firefox, blinks):
+def play_simon_says(driver: webdriver.Chrome, blinks):
     blink_idx = 0
     correct_squares = []
     while blink_idx < blinks:
@@ -31,7 +31,7 @@ def play_simon_says(driver: webdriver.Firefox, blinks):
     return True
 
 
-def simon_says_loop(driver: webdriver.Firefox, queue, target_score: int = 3000) -> int:
+def simon_says_loop(driver: webdriver.Chrome, queue, target_score: int = 3000) -> int:
     try:
         WebDriverWait(driver, 2, 0.0001).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.square-container"))

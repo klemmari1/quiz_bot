@@ -5,4 +5,5 @@ isort
 nordvpn-switcher
 pip-tools
 selenium
+selenium-stealth
 webdriver-manager

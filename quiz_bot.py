@@ -60,7 +60,7 @@ def get_input_args():
     return use_vpn, status, url, code_sender
 
 
-def switch_to_frame(driver: webdriver.Firefox):
+def switch_to_frame(driver: webdriver.Chrome):
     driver.switch_to.default_content()
 
     WebDriverWait(driver, 30).until(
@@ -71,7 +71,7 @@ def switch_to_frame(driver: webdriver.Firefox):
     )
 
 
-def switch_to_frame2(driver: webdriver.Firefox):
+def switch_to_frame2(driver: webdriver.Chrome):
     driver.switch_to.default_content()
 
     WebDriverWait(driver, 30).until(
@@ -184,7 +184,7 @@ def get_verification_code(email_address, password, code_sender):
     return verification_code
 
 
-def input_email_and_accept_terms(driver: webdriver.Firefox, email_addr: str):
+def input_email_and_accept_terms(driver: webdriver.Chrome, email_addr: str):
     email_input = WebDriverWait(driver, 10).until(
         EC.visibility_of_element_located((By.CSS_SELECTOR, "input.form-control"))
     )
@@ -202,7 +202,7 @@ def input_email_and_accept_terms(driver: webdriver.Firefox, email_addr: str):
     button_click(driver, main_button)
 
 
-def enter_verification_code(driver: webdriver.Firefox, verification_code: str):
+def enter_verification_code(driver: webdriver.Chrome, verification_code: str):
     try:
         WebDriverWait(driver, 10).until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, "input.otp-input"))
@@ -214,7 +214,7 @@ def enter_verification_code(driver: webdriver.Firefox, verification_code: str):
         pass
 
 
-def start_quiz(driver: webdriver.Firefox, status: int):
+def start_quiz(driver: webdriver.Chrome, status: int):
     try:
         checkbox_element = WebDriverWait(driver, 10).until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, "span.mc-checkmark"))
@@ -244,7 +244,7 @@ def start_quiz(driver: webdriver.Firefox, status: int):
             pass
 
 
-def game_loop(driver: webdriver.Firefox) -> int:
+def game_loop(driver: webdriver.Chrome) -> int:
     queue = Queue()
     quiz = threading.Thread(
         target=quiz_loop,
@@ -282,7 +282,7 @@ def game_loop(driver: webdriver.Firefox) -> int:
     return max(statuses)
 
 
-def claim_prize(driver: webdriver.Firefox, email_addr: str):
+def claim_prize(driver: webdriver.Chrome, email_addr: str):
     try:
         claim_prize_button = WebDriverWait(driver, 50).until(
             EC.visibility_of_element_located(
@@ -411,8 +411,8 @@ def run():
 
             if status != -1:
                 status = claim_prize(driver, email_addr)
-    except:
-        pass
+    except Exception as e:
+        print(e)
     driver.close()
     if use_vpn:
         terminate_VPN()
