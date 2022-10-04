@@ -2,7 +2,7 @@ from fake_useragent import UserAgent
 from selenium import webdriver
 from selenium_stealth import stealth
 from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.utils import ChromeType
+from webdriver_manager.core.utils import ChromeType
 
 
 def get_driver():
