@@ -18,7 +18,7 @@ def press_mole_buttons(driver: webdriver.Chrome):
                 )
             )
             button_click(driver, mole_button, pause=False)
-            time.sleep(0.25)
+            time.sleep(0.1)
         except:
             break
 
@@ -35,7 +35,7 @@ def press_golden_button(driver: webdriver.Chrome):
             now = time.time()
             while time.time() - now < 2.5:
                 button_click(driver, golden_button, pause=False)
-                time.sleep(0.25)
+                time.sleep(0.1)
 
             time.sleep(1)
         except:
