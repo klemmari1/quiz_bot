@@ -2,7 +2,6 @@ from fake_useragent import UserAgent
 from selenium import webdriver
 from selenium_stealth import stealth
 from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.core.utils import ChromeType
 
 
 def get_driver():
@@ -25,7 +24,6 @@ def get_driver():
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
 
-    # driver_path = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
     driver_path = ChromeDriverManager().install()
 
     # Anti bot-detection
