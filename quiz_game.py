@@ -27,7 +27,7 @@ def get_answers() -> dict:
 
 
 def get_answer_text(answer_element: WebElement):
-    return answer_element.find_element_by_tag_name("span").text
+    return answer_element.find_element(By.TAG_NAME, "span").text
 
 
 def get_choice(question: str, choices: list, answers: dict):
