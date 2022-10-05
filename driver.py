@@ -4,8 +4,6 @@ from selenium_stealth import stealth
 
 def get_driver():
     options = uc.ChromeOptions()
-
-    options.add_argument("--window-size=480,860")
     options.add_argument("--no-first-run --no-service-autorun --password-store=basic")
 
     driver = uc.Chrome(version_main=105, options=options)
