@@ -178,6 +178,7 @@ def run():
     print(email_addr)
 
     driver = get_driver()
+    driver.maximize_window()
 
     use_vpn, status, url, code_sender = get_input_args()
 
