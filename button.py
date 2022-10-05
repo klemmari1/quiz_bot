@@ -10,15 +10,11 @@ def button_click(driver: webdriver.Chrome, button: WebElement, pause=True):
 
     action = webdriver.ActionChains(driver)
 
-    action.pause(
-            random.uniform(0.8, 1.5)
-        ).move_to_element_with_offset(
-            button, xrand, yrand
-        ).pause(
-            random.uniform(0.2, 0.5)
-        ).click_and_hold().pause(
-            random.uniform(0.1, 0.2)
-        ).release()
+    action.pause(random.uniform(0.8, 1.5)).move_to_element_with_offset(
+        button, xrand, yrand
+    ).pause(random.uniform(0.2, 0.5)).click_and_hold().pause(
+        random.uniform(0.1, 0.2)
+    ).release()
     action.perform()
 
     # from selenium.webdriver.common.action_chains import ActionChains
