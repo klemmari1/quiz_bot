@@ -177,12 +177,12 @@ def run():
         return
     print(email_addr)
 
+    driver = get_driver()
+
     use_vpn, status, url, code_sender = get_input_args()
 
     if use_vpn:
         initialize_vpn()
-
-    driver = get_driver()
 
     try:
         while status <= 0:
