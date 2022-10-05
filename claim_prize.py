@@ -7,6 +7,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from button import button_click
 from email_utils import save_email
+from words import get_random_word
 
 
 def claim_prize(driver: webdriver.Chrome, email_addr: str):
