@@ -7,7 +7,7 @@ import re
 from email.header import decode_header
 from os import path
 
-from quiz_bot import get_emails
+from email_utils import get_emails
 
 USED_CODES_FILE = "used_codes.pkl"
 NEW_CODES_FILE_PREFIX = "new_codes_"
