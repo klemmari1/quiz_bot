@@ -5,8 +5,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 def get_driver():
     options = uc.ChromeOptions()
-
-    options.add_argument("--window-size=480,860")
     options.add_argument("--no-first-run --no-service-autorun --password-store=basic")
 
     chrome_manager = ChromeDriverManager()
