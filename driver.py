@@ -11,6 +11,7 @@ def get_driver():
     version = chrome_manager.driver.get_latest_release_version()
     version_main = version.split(".")[0]
     driver = uc.Chrome(version_main=version_main, options=options)
+    driver.maximize_window()
 
     stealth(
         driver,

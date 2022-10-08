@@ -178,7 +178,6 @@ def run():
     print(email_addr)
 
     driver = get_driver()
-    driver.maximize_window()
 
     use_vpn, status, url, code_sender = get_input_args()
 
@@ -187,12 +186,12 @@ def run():
 
     try:
         while status <= 0:
+            print("current status: %s" % status)
+
             driver.get(url)
 
             if status == -1:
                 status = claim_prize(driver, email_addr)
-
-            print("current status: %s" % status)
             time.sleep(2)
 
             if use_vpn:
