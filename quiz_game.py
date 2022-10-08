@@ -72,26 +72,23 @@ def quiz_loop(driver: webdriver.Chrome, queue) -> int:
             )
             .text
         )
-    except:
-        queue.put(-1)
-        return -1
 
-    question_count = int(question_info.split(" ")[-1])
+        question_count = int(question_info.split(" ")[-1])
 
-    question_idx = 0
-    while question_idx < question_count:
-        try:
+        question_idx = 0
+        while question_idx < question_count:
             question_element = WebDriverWait(driver, 10, 0.01).until(
                 EC.visibility_of_element_located((By.CLASS_NAME, "question-text"))
             )
-        except TimeoutException:
-            return -1
-        if question_element == previous_question:
-            continue
-        answer_question(driver, answers, question_element.text)
-        save_answers(answers)
-        previous_question = question_element
-        question_idx += 1
+            if question_element == previous_question:
+                continue
+            answer_question(driver, answers, question_element.text)
+            save_answers(answers)
+            previous_question = question_element
+            question_idx += 1
+    except:
+        queue.put(-1)
+        return -1
 
     queue.put(0)
     return 0

@@ -36,36 +36,37 @@ def simon_says_loop(driver: webdriver.Chrome, queue, target_score: int = 3000) -
         WebDriverWait(driver, 2, 0.0001).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.square-container"))
         )
+
+        blinks = 2
+        time.sleep(4)
+
+        while True:
+            is_playing = play_simon_says(driver, blinks)
+
+            if not is_playing:
+                return -1
+
+            score_info = (
+                WebDriverWait(driver, 5, 0.001)
+                .until(
+                    EC.visibility_of_element_located(
+                        (By.CSS_SELECTOR, "div.info-row span.right-info")
+                    )
+                )
+                .text
+            )
+            score = score_info.split(" ")[0]
+            score_int = parse_number(score, locale="de_DE")
+
+            if score_int > target_score:
+                time.sleep(30)
+                break
+
+            blinks += 1
+
     except:
         queue.put(-1)
         return -1
-
-    blinks = 2
-    time.sleep(4)
-
-    while True:
-        is_playing = play_simon_says(driver, blinks)
-
-        if not is_playing:
-            return -1
-
-        score_info = (
-            WebDriverWait(driver, 10, 0.001)
-            .until(
-                EC.visibility_of_element_located(
-                    (By.CSS_SELECTOR, "div.info-row span.right-info")
-                )
-            )
-            .text
-        )
-        score = score_info.split(" ")[0]
-        score_int = parse_number(score, locale="de_DE")
-
-        if score_int > target_score:
-            time.sleep(30)
-            break
-
-        blinks += 1
 
     queue.put(0)
     return 0
