@@ -1,5 +1,4 @@
 import undetected_chromedriver.v2 as uc
-from selenium_stealth import stealth
 from webdriver_manager.chrome import ChromeDriverManager
 
 
@@ -13,14 +12,15 @@ def get_driver():
     driver = uc.Chrome(version_main=version_main, options=options)
     driver.maximize_window()
 
-    stealth(
-        driver,
-        languages=["en-US", "en"],
-        vendor="Google Inc.",
-        platform="Win32",
-        webgl_vendor="Intel Inc.",
-        renderer="Intel Iris OpenGL Engine",
-        fix_hairline=True,
-    )
+    # from selenium_stealth import stealth
+    # stealth(
+    #     driver,
+    #     languages=["en-US", "en"],
+    #     vendor="Google Inc.",
+    #     platform="Win32",
+    #     webgl_vendor="Intel Inc.",
+    #     renderer="Intel Iris OpenGL Engine",
+    #     fix_hairline=True,
+    # )
 
     return driver
