@@ -50,7 +50,7 @@ def simon_says_loop(driver: webdriver.Chrome, queue, target_score: int = 3000) -
             return -1
 
         score_info = (
-            WebDriverWait(driver, 5, 0.001)
+            WebDriverWait(driver, 10, 0.001)
             .until(
                 EC.visibility_of_element_located(
                     (By.CSS_SELECTOR, "div.info-row span.right-info")
