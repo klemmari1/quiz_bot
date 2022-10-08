@@ -87,6 +87,7 @@ def quiz_loop(driver: webdriver.Chrome, queue) -> int:
             previous_question = question_element
             question_idx += 1
     except:
+        print("quiz game disabled")
         queue.put(-1)
         return -1
 

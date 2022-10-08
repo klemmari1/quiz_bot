@@ -4,17 +4,28 @@ from selenium import webdriver
 from selenium.webdriver.remote.webelement import WebElement
 
 
-def button_click(driver: webdriver.Chrome, button: WebElement, pause=True):
-    xrand = button.size["width"] * random.uniform(-0.3, 0.3)
-    yrand = button.size["height"] * random.uniform(-0.3, 0.3)
+def move_to_element(driver: webdriver.Chrome, button: WebElement, pause=True):
+    xrand = button.size["width"] * random.uniform(-0.2, 0.2)
+    yrand = button.size["height"] * random.uniform(-0.2, 0.2)
 
     action = webdriver.ActionChains(driver)
 
-    action.pause(random.uniform(0.8, 1.5)).move_to_element_with_offset(
-        button, xrand, yrand
-    ).pause(random.uniform(0.2, 0.5)).click_and_hold().pause(
-        random.uniform(0.1, 0.2)
-    ).release()
+    if pause:
+        action.pause(random.uniform(0.8, 1.5))
+    action.move_to_element_with_offset(button, xrand, yrand).perform()
+
+
+def button_click(driver: webdriver.Chrome, button: WebElement, pause: bool = True):
+    move_to_element(driver, button, pause)
+
+    action = webdriver.ActionChains(driver)
+
+    if pause:
+        action.pause(random.uniform(0.2, 0.5))
+    action.click_and_hold()
+    if pause:
+        action.pause(random.uniform(0.1, 0.2))
+    action.release()
     action.perform()
 
     # from selenium.webdriver.common.action_chains import ActionChains

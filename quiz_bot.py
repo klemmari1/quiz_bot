@@ -191,7 +191,7 @@ def run():
             driver.get(url)
 
             if status == -1:
-                status = claim_prize(driver, email_addr)
+                status = claim_prize(driver, email_addr, 10)
             time.sleep(2)
 
             if use_vpn:
@@ -222,9 +222,10 @@ def run():
             time.sleep(2)
             switch_to_frame2(driver)
 
-            if status == -2:
-                status = claim_prize(driver, email_addr)
-                break
+            if status <= -1:
+                status = claim_prize(driver, email_addr, 5)
+                if status == 1:
+                    break
 
             start_quiz(driver, status)
 
@@ -236,7 +237,7 @@ def run():
                 url = current_url
 
             if status != -1:
-                status = claim_prize(driver, email_addr)
+                status = claim_prize(driver, email_addr, 50)
     except Exception as e:
         print(e)
     driver.close()

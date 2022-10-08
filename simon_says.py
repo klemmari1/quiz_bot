@@ -13,17 +13,14 @@ def play_simon_says(driver: webdriver.Chrome, blinks):
     blink_idx = 0
     correct_squares = []
     while blink_idx < blinks:
-        try:
-            square = WebDriverWait(driver, 10, 0.001).until(
-                EC.visibility_of_element_located(
-                    (By.CSS_SELECTOR, "div.square-container div.blink")
-                )
+        square = WebDriverWait(driver, 10, 0.000001).until(
+            EC.visibility_of_element_located(
+                (By.CSS_SELECTOR, "div.square-container div.blink")
             )
-            correct_squares.append(square)
-            blink_idx += 1
-            time.sleep(0.4)
-        except:
-            return False
+        )
+        correct_squares.append(square)
+        blink_idx += 1
+        time.sleep(0.48)
 
     for square in correct_squares:
         button_click(driver, square)
@@ -33,7 +30,7 @@ def play_simon_says(driver: webdriver.Chrome, blinks):
 
 def simon_says_loop(driver: webdriver.Chrome, queue, target_score: int = 3000) -> int:
     try:
-        WebDriverWait(driver, 2, 0.0001).until(
+        WebDriverWait(driver, 5, 0.0001).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.square-container"))
         )
 
@@ -41,10 +38,7 @@ def simon_says_loop(driver: webdriver.Chrome, queue, target_score: int = 3000) -
         time.sleep(4)
 
         while True:
-            is_playing = play_simon_says(driver, blinks)
-
-            if not is_playing:
-                return -1
+            play_simon_says(driver, blinks)
 
             score_info = (
                 WebDriverWait(driver, 5, 0.001)
@@ -65,6 +59,7 @@ def simon_says_loop(driver: webdriver.Chrome, queue, target_score: int = 3000) -
             blinks += 1
 
     except:
+        print("simon says disabled")
         queue.put(-1)
         return -1
 

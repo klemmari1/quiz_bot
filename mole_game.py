@@ -50,6 +50,7 @@ def mole_game_loop(driver: webdriver.Chrome, queue) -> int:
             )
         )
     except:
+        print("mole game disabled")
         queue.put(-1)
         return -1
 

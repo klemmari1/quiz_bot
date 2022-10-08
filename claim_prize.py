@@ -10,58 +10,63 @@ from email_utils import save_email
 from words import get_random_word
 
 
-def claim_prize(driver: webdriver.Chrome, email_addr: str):
+def claim_prize(driver: webdriver.Chrome, email_addr: str, wait_seconds: int = 50):
     try:
-        claim_prize_button = WebDriverWait(driver, 50).until(
+        claim_prize_button = WebDriverWait(driver, wait_seconds).until(
             EC.visibility_of_element_located(
                 (By.CSS_SELECTOR, "div.prize-overlay button.main-button")
             )
         )
         button_click(driver, claim_prize_button)
+
+        # Opens another tab
+
+        time.sleep(2)
+        driver.switch_to.window(driver.window_handles[-1])
+        time.sleep(2)
+
+        name_input = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "input[name='name']"))
+        )
+        name_input.send_keys(get_random_word())
+
+        time.sleep(0.5)
+
+        email_input = driver.find_element(
+            by=By.CSS_SELECTOR, value="input[name='email']"
+        )
+        email_input.send_keys(email_addr)
+
+        time.sleep(0.5)
+
+        region_select = driver.find_element(
+            by=By.CSS_SELECTOR, value="select[name='gameServer']"
+        )
+        button_click(driver, region_select)
+
+        time.sleep(0.5)
+
+        euw = driver.find_element(
+            by=By.CSS_SELECTOR, value="option[value='Europe West (EUW)']"
+        )
+        euw.click()
+
+        time.sleep(0.5)
+
+        checkmark = driver.find_element(by=By.CLASS_NAME, value="mc-checkmark")
+        button_click(driver, checkmark)
+
+        time.sleep(0.5)
+
+        submit_button = driver.find_element(
+            by=By.CSS_SELECTOR, value="input.custom-button"
+        )
+        button_click(driver, submit_button)
+
+        save_email(email_addr)
+
     except:
         return -1
-
-    # Opens another tab
-
-    time.sleep(2)
-    driver.switch_to.window(driver.window_handles[-1])
-    time.sleep(2)
-
-    name_input = WebDriverWait(driver, 10).until(
-        EC.visibility_of_element_located((By.CSS_SELECTOR, "input[name='name']"))
-    )
-    name_input.send_keys(get_random_word())
-
-    time.sleep(0.5)
-
-    email_input = driver.find_element(by=By.CSS_SELECTOR, value="input[name='email']")
-    email_input.send_keys(email_addr)
-
-    time.sleep(0.5)
-
-    region_select = driver.find_element(
-        by=By.CSS_SELECTOR, value="select[name='gameServer']"
-    )
-    button_click(driver, region_select)
-
-    time.sleep(0.5)
-
-    euw = driver.find_element(
-        by=By.CSS_SELECTOR, value="option[value='Europe West (EUW)']"
-    )
-    euw.click()
-
-    time.sleep(0.5)
-
-    checkmark = driver.find_element(by=By.CLASS_NAME, value="mc-checkmark")
-    button_click(driver, checkmark)
-
-    time.sleep(0.5)
-
-    submit_button = driver.find_element(by=By.CSS_SELECTOR, value="input.custom-button")
-    button_click(driver, submit_button)
-
-    save_email(email_addr)
 
     time.sleep(5)
     return 1
