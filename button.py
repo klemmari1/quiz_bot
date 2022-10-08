@@ -5,8 +5,8 @@ from selenium.webdriver.remote.webelement import WebElement
 
 
 def button_click(driver: webdriver.Chrome, button: WebElement, pause=True):
-    xrand = button.size["width"] * random.uniform(-0.2, 0.2)
-    yrand = button.size["height"] * random.uniform(-0.2, 0.2)
+    xrand = button.size["width"] * random.uniform(-0.3, 0.3)
+    yrand = button.size["height"] * random.uniform(-0.3, 0.3)
 
     action = webdriver.ActionChains(driver)
 
